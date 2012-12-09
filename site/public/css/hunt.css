@@ -1,0 +1,38 @@
+div[data-role='content'] {
+    overflow: hidden;
+    position: fixed;
+    top: 40px;
+    bottom: -60px;
+    left: 0px;
+    right: 0px;
+}
+
+.summary {
+  font-size: 8pt;
+}
+
+#summary {
+  font-size: 16pt;
+}
+
+span.complete {
+  border: 2px solid #333; 
+  line-height: 20px; 
+  font-size: 20px;
+  width: 16px; 
+  height:20px;
+  display: inline-block;
+  margin-right: 10px;
+  color:green;
+}
+
+span.incomplete {
+  border: 2px solid #333; 
+  line-height: 20px; 
+  font-size: 20px;
+  width: 16px; 
+  height:20px;
+  display: inline-block;
+  margin-right: 10px;
+  color:red;
+}
