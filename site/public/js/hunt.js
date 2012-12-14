@@ -47,7 +47,7 @@ var bb = {
   view: {}
 }
 
-var server = 'http://192.168.1.3'
+var server = 'http://127.0.0.1' //'http://192.168.1.3'
 // var server = 'http://184.72.57.180'
 
 bb.init = function() {
@@ -68,16 +68,18 @@ bb.init = function() {
   
   var myRouter = Backbone.Router.extend({
     routes : {
-	  '': 'showQuestions',
+	  '': 'showRegistration',
+	  'questions': 'showQuestions',
 	  'question': 'showQuestion',
 	  'photo': 'showPhoto',
-	  'registration': 'showRegistration'
+	  'participants': 'showParticipants'
 	},
 	showQuestions : function() {
 		console.log('myRouter:showQuestions')
 		$('div#question').hide()
 		$('div#photo').hide()
 		$('div#registration').hide()
+		$('div#participants').hide()
 		$('div#questions').show()
 	},
 	showQuestion : function() {
@@ -85,6 +87,7 @@ bb.init = function() {
 		$('div#photo').hide()
 		$('div#questions').hide()
 		$('div#registration').hide()
+		$('div#participants').hide()
 		$('div#question').show()
 	},
 	showPhoto : function() {
@@ -92,6 +95,7 @@ bb.init = function() {
 		$('div#questions').hide()
 		$('div#question').hide()
 		$('div#registration').hide()
+		$('div#participants').hide()
 		$('div#photo').show()
 	},
 	showRegistration : function() {
@@ -99,29 +103,56 @@ bb.init = function() {
 		$('div#questions').hide()
 		$('div#question').hide()
 		$('div#photo').hide()
+		$('div#participants').hide()
 		$('div#registration').show()
+	},
+	showParticipants : function() {
+		console.log('myRouter:showRegistration')
+		$('div#questions').hide()
+		$('div#question').hide()
+		$('div#photo').hide()
+		$('div#registration').hide()
+		$('div#participants').show()
 	}
   });
   // As per bb documentation need to create a router and call history.start()
   bb.router = new myRouter()
   Backbone.history.start()
-  
-  bb.model.State = Backbone.Model.extend({    
+
+  bb.model.Participant = Backbone.Model.extend(_.extend({
+    urlRoot: server+'/api/participant',
     defaults: {
-      numQuestions: 0,
+	  id: null,
+	  userName:'',
+	  email:'',
+	  huntCode:'',
 	  numLocated: 0,
-	  numAnswered: 0,
-	  huntNames: []
-    },
+	  numCorrect: 0,
+	  photo:false
+	},
 
 	initialize: function(){
-	  console.log('model.State:initialize:begin')
+	  console.log('model.Participant:initialize:begin')
 	  var self = this
 	  _.bindAll(self)
-	  console.log('model.State:initialize:end')
+	  var savedParticipant = localStorage.getItem('hunt_participant_id')
+	  self.set({id:savedParticipant})
+	  console.log('model.Participant:initialize:end')
 	}
-  })
+  }))
   
+  bb.model.Participants = Backbone.Collection.extend(_.extend({
+    model: bb.model.Participant,
+	url: server+'/api/participant',
+
+	initialize: function(){
+	  console.log('model.Participants:initialize:begin')
+	  var self = this
+	  _.bindAll(self)
+	  console.log('model.Participants:initialize:end')
+	}
+  }))
+
   bb.model.Question = Backbone.Model.extend(_.extend({
     defaults: {
 	  correct:false,
@@ -132,7 +163,8 @@ bb.init = function() {
 	  guess:'',
 	  latitude: null,
 	  longitude: null,
-	  number:0
+	  number:0,
+	  participantID: null
 	},
 
 	initialize: function(){
@@ -145,8 +177,7 @@ bb.init = function() {
 
   bb.model.Questions = Backbone.Collection.extend(_.extend({
     model: bb.model.Question,
-	localStorage: new Store("questions"),
-	//url: '/api/questions',
+	url: server+'/api/question',
 
 	initialize: function(){
 	  console.log('model.Questions:initialize:begin')
@@ -155,7 +186,7 @@ bb.init = function() {
 	  console.log('model.Questions:initialize:end')
 	},
 
-    addquestion: function(question){
+    addquestion: function(question, participantID){
 	  console.log('model.Questions:addquestion:begin')
       var self = this
       var q = new bb.model.Question({
@@ -164,7 +195,8 @@ bb.init = function() {
 		latitude:question.latitude,
 		longitude:question.longitude,
 		answer:question.answer,
-		number:question.number
+		number:question.number,
+		participantID: participantID
 		})
       self.add(q)
 	  q.save()
@@ -174,7 +206,7 @@ bb.init = function() {
 
   bb.view.QuestionListEntry = Backbone.View.extend(_.extend({
 	events: {
-	  'click #questionlistentry': 'showQuestion'
+	  'tap #questionlistentry': 'showQuestion'
     },
 	initialize: function(){
 	  console.log('view.QuestionListEntry:initialize:begin')
@@ -254,13 +286,15 @@ bb.init = function() {
 		numQuestions: self.$el.find('#numQuestions'),
 		numAnswered: self.$el.find('#numAnswered'),
 		numLocated: self.$el.find('#numLocated'),
-		goPhoto: self.$el.find('#goPhoto')
+		goParticipants: self.$el.find('#goParticipants'),
+		leaveHunt: self.$el.find('#leaveHunt')
 	  }
-	  self.elements.goPhoto.tap(self.showPhoto)
+	  self.elements.goParticipants.tap(self.goParticipants)
+	  self.elements.leaveHunt.tap(self.leaveHunt)
 	  self.questions = questions
 	  self.questions.on('add', self.addquestion)
 	  self.questions.on('reset', self.render)
-	  app.model.state.on('change:numQuestions change:numAnswered change:numLocated', self.footer)
+	  app.model.participant.on('change:numCorrect change:numLocated', self.footer)
 	  console.log('view.Questions:initialize:end')
     },
 
@@ -279,9 +313,9 @@ bb.init = function() {
 	footer:function(){
 	  console.log('view.Questions:footer:begin')
       var self = this
-      self.elements.numQuestions.html(app.model.state.get('numQuestions'))
-      self.elements.numAnswered.html(app.model.state.get('numAnswered'))
-      self.elements.numLocated.html(app.model.state.get('numLocated'))
+	  self.elements.numQuestions.html(app.model.questions.length)
+      self.elements.numAnswered.html(app.model.participant.get('numCorrect'))
+      self.elements.numLocated.html(app.model.participant.get('numLocated'))
 	  console.log('view.Questions:footer:end')
 	},
 
@@ -294,12 +328,25 @@ bb.init = function() {
 	  console.log('view.Questions:addquestion:end')
 	},
 
-    showPhoto: function() {
-	  console.log('view.Questions:goPhoto:begin')
+    goParticipants: function() {
+	  console.log('view.Questions:goParticipants:begin')
 	  var self = this
-	  console.log('going to photo')
-	  bb.router.navigate('photo',{trigger:true})
-      console.log('view.Questions:goPhoto:end')
+	  app.view.participants.render()
+      bb.router.navigate('participants',{trigger:true})
+      console.log('view.Questions:goParticipants:end')
+	  return false
+	},
+	
+    leaveHunt: function() {
+	  console.log('view.Questions:leaveHunt:begin')
+	  var self = this
+	  app.model.questions.reset()
+	  app.model.participant.destroy()
+	  app.model.participant.set({id:null, userName:null, mail:null, huntCode:null})
+	  localStorage.removeItem('hunt_participant_id')
+	  app.view.registration.render()
+	  bb.router.navigate('',{trigger:true})
+      console.log('view.Questions:leaveHunt:end')
 	  return false
 	}
   }, 
@@ -365,9 +412,9 @@ bb.init = function() {
 		located = (d*1000 < 30)
 	  }
 	  app.model.questions.at(self.question.attributes.number).set({guess:self.elements.guess.val(), correct:correct, located:located}).save()
-	  app.model.state.set({numQuestions: app.model.questions.length, numAnswered: app.model.questions.where({correct:true}).length, numLocated: app.model.questions.where({located:true}).length})
+	  app.model.participant.set({numCorrect: app.model.questions.where({correct:true}).length, numLocated: app.model.questions.where({located:true}).length}).save()
 
-      bb.router.navigate('',{trigger:true})
+      bb.router.navigate('questions',{trigger:true})
 	  console.log('view.Question:saveAnswer:end')
 	  return false
 	},
@@ -375,7 +422,7 @@ bb.init = function() {
 	returnToList: function() {
 	  console.log('view.Question:returntoList:begin')
 	  var self = this
-      bb.router.navigate('',{trigger:true})
+      bb.router.navigate('questions',{trigger:true})
 	  console.log('view.Question:returntoList:end')
 	  return false
 	}
@@ -416,10 +463,11 @@ bb.init = function() {
 	},
 	
 	returnToList: function() {
-	  console.log('view.Question:returntoList:begin')
+	  console.log('view.Photo:returntoList:begin')
 	  var self = this
-      bb.router.navigate('',{trigger:true})
-	  console.log('view.Question:returntoList:end')
+	  app.view.participants.render()
+      bb.router.navigate('participants',{trigger:true})
+	  console.log('view.Photo:returntoList:end')
 	  return false
 	}
   }))
@@ -434,37 +482,167 @@ bb.init = function() {
 	  _.bindAll(self)
 	  self.setElement('#registration')
 	  self.elements = {
-		huntName: self.$el.find('#huntName')
+		huntCode: self.$el.find('#huntCode'),
+		userName: self.$el.find('#userName'),
+		email: self.$el.find('#email')
 	  }
-	  
 	  console.log('view.Registration:initialize:end')
 	},
 	
 	render: function() {
 	  console.log('view.Registration:render:begin')
 	  var self = this
-	  if (app.model.state.attributes.huntNames.length === 0){
-	    console.log('loading hunts from server')
-        $.get(server+'/api/hunt',
-          function(data,status){
-		    for (var i=0; i<data.length; i++){
-	          console.log('Adding hunt from server: '+data[i].huntCode)
-	          self.elements.huntName.addOption(data[i].huntCode, data[i].huntName)
-	        }
-	      },
-		  'json')
-	  }
+	  self.elements.userName.val('')
+	  self.elements.email.val('')
+	  console.log('loading hunts from server')
+      $.get(server+'/api/hunt',
+        function(data,status){
+		  for (var i=0; i<data.length; i++){
+	        console.log('Adding hunt from server: '+data[i].huntCode)
+	        self.elements.huntCode.addOption(data[i].huntCode, data[i].huntName)
+	      }
+	    },
+		'json'
+	  )
   	  console.log('view.Registration:render:end')
 	},
 	
 	register: function() {
 	  console.log('view.Question:register:begin')
 	  var self = this
-	  alert('registering')
+	  // Create a new participant, register on server and create questions
+	  app.model.participant.set({userName:self.elements.userName.val(), huntCode: self.elements.huntCode.val(), email: self.elements.email.val()})
+	  app.model.participant.save(
+	    {},
+	    {
+		success: function(model, response){
+		  console.log('setting LS with'+model.id)
+	      localStorage.setItem('hunt_participant_id',model.id)
+		  // now create a specific set of questions for this participant
+		  console.log('creating questions for'+model.id)
+		  $.get(server+'/api/question?huntCode='+self.elements.huntCode.val(),
+          function(data,status){
+		    for (var i=0; i<data.length; i++){
+	          console.log('Adding question from server: '+data[i].summary)
+	          app.model.questions.addquestion(data[i], model.id)
+	        }
+	      }, 'json')
+		  app.view.questions.render()
+	      bb.router.navigate('questions',{trigger:true})
+		},
+        error: function (model, response) {
+          console.log("error saving new participant")
+		}
+        }
+	  )
 	  console.log('view.Question:register:end')
 	  return false
 	}
   }))
+  
+  bb.view.ParticipantListEntry = Backbone.View.extend(_.extend({
+	events: {
+	  'tap #participantlistentry': 'showPhoto'
+    },
+	initialize: function(){
+	  console.log('view.ParticipantListEntry:initialize:begin')
+	  var self = this
+	  _.bindAll(self)
+	  self.render()
+	  console.log('view.ParticipantListEntry:initialize:end')
+	},
+	
+	render: function() {
+	  console.log('view.ParticipantListEntry:render:begin')
+	  var self = this
+	  var html = self.tm.entry( {userName: self.model.userName, numCorrect: self.model.numCorrect, numLocated: self.model.numLocated})
+	  self.$el.append(html)
+	  self.$el.find('#showPhoto').hide()
+	  if (self.model.photo){
+	    self.$el.find('#showPhoto').show()
+	  }
+  	  console.log('view.ParticipantListEntry:render:end')
+	},
+	
+	showPhoto: function() {
+	  console.log('view.ParticipantListEntry:showPhoto:begin')
+	  var self = this
+	  if (self.model.photo){
+	    console.log('showing photo for '+self.model.id)
+	  }
+	  console.log('view.ParticipantListEntry:showPhoto:end')
+	  return false
+	}
+  }, {
+    tm: {
+	  entry: _.template($('#participantlist').html() ) 
+	}
+  
+  }))
+
+  bb.view.Participants = Backbone.View.extend(_.extend({
+    initialize: function() {
+	  console.log('view.Participants:initialize:begin')
+      var self = this
+      _.bindAll(self)
+
+      self.setElement('#participants')
+	  self.elements = {
+		goPhoto: self.$el.find('#goPhoto'),
+		back: self.$el.find('#participantsBack')
+	  }
+	  self.elements.goPhoto.tap(self.showPhoto)
+	  self.elements.back.tap(self.returnToList)
+	  console.log('view.Participants:initialize:end')
+    },
+
+    render: function() {
+	  console.log('view.Participants:render:begin')
+      var self = this
+	  self.setElement('#participantlist')
+      self.$el.empty()
+	  console.log('loading participants from server')
+      $.get(server+'/api/participant',  // needs to limit on hunt
+        function(data,status){
+		  for (var i=0; i<data.length; i++){
+	        console.log('Adding participant from server: '+data[i].userName)
+	        self.addParticipant(data[i])
+	      }
+	    },
+		'json'
+	  )
+	  console.log('view.Participants:render:end')
+    },
+	
+	addParticipant:function(participant){
+	  console.log('view.Participants:addParticipant:begin')
+      var self = this
+      var participantview = new bb.view.ParticipantListEntry({model:participant})
+	  self.$el.append(participantview.el)
+	  self.scroll()
+	  console.log('view.Participants:addParticipant:end')
+	},
+
+    showPhoto: function() {
+	  console.log('view.Participants:goPhoto:begin')
+	  var self = this
+	  bb.router.navigate('photo',{trigger:true})
+      console.log('view.Participants:goPhoto:end')
+	  return false
+	},
+	
+	returnToList: function() {
+	  console.log('view.Participants:returnToListbegin')
+	  var self = this
+      bb.router.navigate('questions',{trigger:true})
+	  console.log('view.Participants:returntoList:end')
+	  return false
+	}
+
+  }, 
+  scrollContent))
+
+  
 }
 
 app.init_browser = function() {
@@ -482,47 +660,43 @@ app.init = function() {
   app.init_browser()
   
   app.model.questions = new bb.model.Questions()
-  app.model.state = new bb.model.State()
+  app.model.participant = new bb.model.Participant()
   
   app.view.questions = new bb.view.Questions(app.model.questions)
-  app.view.questions.render()
+  
+  app.view.participants = new bb.view.Participants()
   
   app.model.question = new bb.model.Question()
   app.view.question = new bb.view.Question(app.model.question)
   
   app.view.photo = new bb.view.Photo()
   app.view.registration = new bb.view.Registration()
+  app.view.registration.render()
 
-  
-  app.model.questions.fetch( {
-    error: function() {
-	  alert('error loading question from localstorage')
-	}
-  })
-  app.model.state.set({numQuestions: app.model.questions.length, numAnswered: app.model.questions.where({correct:true}).length, numLocated: app.model.questions.where({located:true}).length})
-
-  if (app.model.questions.length === 0){
-    app.view.registration.render()
-	bb.router.navigate('registration',{trigger:true})
+  if (app.model.participant.attributes.id) {
+    app.model.participant.fetch({
+	  success: function(){
+	    console.log('got the participant details from server')
+		app.model.questions.fetch({
+		  data: {participantID: app.model.participant.attributes.id},
+		  success: function(){
+		    app.view.questions.render()
+	        bb.router.navigate('questions',{trigger:true})
+		  },
+		  error: function(){
+	        console.log('did not get the participant questions from the server')
+		    app.model.participant.set({id:null})
+			localStorage.removeItem('hunt_participant_id')
+		  }
+		})
+	  },
+	  error: function(){
+	    console.log('did not get the participant details from the server')
+		app.model.participant.set({id:null})
+		localStorage.removeItem('hunt_participant_id')
+	  }
+	})
   }
-	    /*
-		for (var i=0; i<4; i++){
-	      app.model.questions.addquestion({
-			summary:'question '+i,question:'What is '+i+'?',latitude: -46,
-			longitude: 7.2,answer: 'answer',number:i})
-	    }
-		*/
-		/*
-		console.log('loading questions from server')
-        $.get('http://192.168.1.3/api/questions',  // local machine
-        //$.get('http://184.72.57.180/api/questions',  // AWS
-          function(data,status){
-		    for (var i=0; i<data.length; i++){
-	          console.log('Adding question from server: '+data[i].summary)
-	          app.model.questions.addquestion(data[i])
-	        }
-	      }, 'json')
-		*/
   console.log('end init')
 }
 

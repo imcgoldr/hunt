@@ -34,8 +34,17 @@ function init() {
   
   var router = connect.router( function( app ) {
     app.get('/api/ping', api.ping)
-	app.get('/api/questions',     api.questions.list)
+	app.get('/api/question',     api.question.list)
 	app.get('/api/hunt',     api.hunt.list)
+	app.get('/api/participant',     api.participant.list)
+	app.post('/api/participant',     api.participant.create)
+	app.get('/api/participant/:id', api.participant.read)
+	app.post('/api/question',     api.question.create)
+	app.put('/api/question/:id', api.question.update)
+	app.put('/api/participant/:id', api.participant.update)
+	app.del('/api/participant/:id', api.participant.del)
+
+
   })
   server.use(router)
 

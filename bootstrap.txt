@@ -1,6 +1,24 @@
-use ass2
+use hunt
+
+db.hunt.insert({
+  huntCode: 'dun',
+  huntName: 'Dungarven'})
+
+db.hunt.insert({
+  huntCode: 'tra',
+  huntName: 'Tramore'})
+  
+db.hunt.insert({
+  huntCode: 'wat',
+  huntName: 'Waterford'})
+
+db.question.find({participantID:{$exists:true}})
+
+db.question.remove({participantID:{$exists:true}})
+db.participant.remove()
 
 db.question.insert({
+  huntCode: 'tra',
   summary: 'Bless You',
   question: 'What time is mass on saturday evening?',
   answer: '6:30',
@@ -9,6 +27,7 @@ db.question.insert({
   number: 0})
 
 db.question.insert({
+  huntCode: 'tra',
   summary: 'See More',
   question: 'What is the name of the video shop at the top of the town?',
   answer: 'Xtravision',
@@ -17,6 +36,7 @@ db.question.insert({
   number: 1})
 
 db.question.insert({
+  huntCode: 'tra',
   summary: 'Horsey',
   question: 'What pub shares its name with a classic horse race?',
   answer: 'The St. Ledger',
@@ -24,6 +44,12 @@ db.question.insert({
   longitude: -7.1557727,
   number: 2})
   
-db.hunt.insert({
-  huntCode: 'dungarven',
-  huntName: 'Dungarven'})
+db.question.insert({
+  huntCode: 'dun',
+  summary: 'Townie',
+  question: 'What colour is the door on the town hall?',
+  answer: 'brown',
+  latitude: 52.164412,
+  longitude: -7.1657361,
+  number: 0})
+  
