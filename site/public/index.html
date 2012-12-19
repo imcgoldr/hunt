@@ -14,7 +14,6 @@
   <script src="js/backbone.0.9.2.js"></script>
   <script src="js/iscroll.js"></script>
   <script src="js/cordova-2.0.0.js"></script>
-  <script src="js/jquery.selectboxes.js"></script>
   <script src="js/hunt.js"></script>
 </head> 
 <body> 
@@ -31,7 +30,7 @@
       <label for="email">Mail:</label>
       <input type="text" id="email" maxlength="30"/>
       <label for="huntCode">Hunt:</label>
-      <select id="huntCode" inline="true">
+      <select id="huntCode" data-native-menu="false" inline="true">
       </select>
 	</div>
   </div>
@@ -40,11 +39,11 @@
 <div id="questions" data-role="page" data-theme="a">
   <div data-role="header" data-position="fixed" data-theme="a">
 	<a id="leaveHunt" data-icon="delete" class="ui-btn-left">Leave</a>
-    <h1>Treasure Hunt</h1>
+	  <h1><span id="numAnswered"></span>/<span id="numQuestions"></span> (<span id="numLocated"></span> Located)</h1>
 	<a id="goParticipants" data-icon="plus" class="ui-btn-right">Hunt</a>
   </div>
   <div data-role="content">
-	<div id="scroller1">
+	<div id="qscroller">
       <ul id="questionlist" data-role="listview">
         <li id="questionlistentry">
 		  <span id="correct">{{correct}}</span>
@@ -53,9 +52,6 @@
         </li>
       </ul>
 	</div>
-  </div>
-  <div data-role="footer" data-position="fixed" data-theme="a">
-	  <h1><span id="numAnswered"></span>/<span id="numQuestions"></span> (<span id="numLocated"></span> Located)</h1>
   </div>
 </div>
 
@@ -80,7 +76,7 @@
 	<a id="goPhoto" data-icon="plus" class="ui-btn-right">Photo</a>
   </div>
   <div data-role="content">
-	<div id="scroller">
+	<div id="pscroller">
       <ul id="participantlist" data-role="listview">
         <li id="participantlistentry">
 		  <span id="numCorrect">{{numCorrect}}</span>

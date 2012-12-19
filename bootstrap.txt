@@ -16,6 +16,7 @@ db.question.find({participantID:{$exists:true}})
 
 db.question.remove({participantID:{$exists:true}})
 db.participant.remove()
+db.question.remove()
 
 db.question.insert({
   huntCode: 'tra',
@@ -44,6 +45,17 @@ db.question.insert({
   longitude: -7.1557727,
   number: 2})
   
+for (var i=3; i<31; i++){
+db.question.insert({
+  huntCode: 'tra',
+  summary: 'Q'+i,
+  question: 'This is question '+i,
+  answer: 'answer'+i,
+  latitude: 52.1662819,
+  longitude: -7.1557727,
+  number: i})
+}
+
 db.question.insert({
   huntCode: 'dun',
   summary: 'Townie',
@@ -53,3 +65,23 @@ db.question.insert({
   longitude: -7.1657361,
   number: 0})
   
+for (var i=1; i<31; i++){
+db.question.insert({
+  huntCode: 'dun',
+  summary: 'Q'+i,
+  question: 'This is question '+i,
+  answer: 'answer'+i,
+  latitude: 52.1662819,
+  longitude: -7.1557727,
+  number: i})
+}
+
+for (var i=1; i<51; i++){
+db.participant.insert({
+      userName:'particpant'+i,
+	  email:'ian@ian.com',
+	  huntCode:'tra',
+	  numLocated: i-3,
+	  numCorrect: i,
+	  photo:false})
+}

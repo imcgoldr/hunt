@@ -99,7 +99,6 @@ exports.question = {
 	if (input.participantID) {
 	  query.participantID = input.participantID
 	}
-
     questioncoll.find( query, options, res.err$( function( cursor ) {
       cursor.toArray( res.err$( function( docs ) {
         output = docs

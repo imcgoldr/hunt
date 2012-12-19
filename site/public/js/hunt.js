@@ -47,7 +47,8 @@ var bb = {
   view: {}
 }
 
-var server = 'http://127.0.0.1' //'http://192.168.1.3'
+//var server = 'http://127.0.0.1'
+var server = 'http://192.168.1.3'
 // var server = 'http://184.72.57.180'
 
 bb.init = function() {
@@ -60,7 +61,7 @@ bb.init = function() {
           self.scroller.refresh()
         }
         else {
-		  self.scroller = new iScroll( $('#scroller')[0] )
+		  self.scroller = new iScroll( $('#pscroller')[0] )
         }
       },1)
     }
@@ -204,9 +205,9 @@ bb.init = function() {
     }
   }))
 
-  bb.view.QuestionListEntry = Backbone.View.extend(_.extend({
+  bb.view.QuestionListEntry = Backbone.View.extend(_.extend({  
 	events: {
-	  'tap #questionlistentry': 'showQuestion'
+	  'touchend #questionlistentry': 'showQuestion'
     },
 	initialize: function(){
 	  console.log('view.QuestionListEntry:initialize:begin')
@@ -292,9 +293,11 @@ bb.init = function() {
 	  self.elements.goParticipants.tap(self.goParticipants)
 	  self.elements.leaveHunt.tap(self.leaveHunt)
 	  self.questions = questions
-	  self.questions.on('add', self.addquestion)
 	  self.questions.on('reset', self.render)
-	  app.model.participant.on('change:numCorrect change:numLocated', self.footer)
+	  app.model.participant.on('change:numCorrect change:numLocated', self.header)
+	  
+	  self.scroller = new iScroll($('#qscroller')[0])
+	  
 	  console.log('view.Questions:initialize:end')
     },
 
@@ -306,17 +309,18 @@ bb.init = function() {
 	  self.questions.each( function(question) {
 		self.addquestion(question)
       })
-	  self.footer()
+	  self.header()
+	  setTimeout(function(){self.scroller.refresh()}, 300)
 	  console.log('view.Questions:render:end')
     },
 	
-	footer:function(){
-	  console.log('view.Questions:footer:begin')
+	header:function(){
+	  console.log('view.Questions:header:begin')
       var self = this
 	  self.elements.numQuestions.html(app.model.questions.length)
       self.elements.numAnswered.html(app.model.participant.get('numCorrect'))
       self.elements.numLocated.html(app.model.participant.get('numLocated'))
-	  console.log('view.Questions:footer:end')
+	  console.log('view.Questions:header:end')
 	},
 
 	addquestion:function(question){
@@ -324,7 +328,7 @@ bb.init = function() {
       var self = this
       var questionview = new bb.view.QuestionListEntry({model:question})
 	  self.$el.append(questionview.el)
-	  self.scroll()
+	  //self.scroll()
 	  console.log('view.Questions:addquestion:end')
 	},
 
@@ -349,8 +353,7 @@ bb.init = function() {
       console.log('view.Questions:leaveHunt:end')
 	  return false
 	}
-  }, 
-  scrollContent))
+  }))
   
   bb.view.Question = Backbone.View.extend(_.extend({
 	events: {
@@ -397,6 +400,7 @@ bb.init = function() {
 	  var self = this
 	  console.log('saving question for '+self.question.attributes.summary)
 	  var correct = self.question.attributes.answer === self.elements.guess.val()
+	  correct ? navigator.notification.vibrate(1000) : navigator.notification.beep(1)
 	  // Handle the location
 	  console.log('latitude:'+app.position.coords.latitude+' longitude:'+app.position.coords.longitude)
 	  var located = true
@@ -446,6 +450,8 @@ bb.init = function() {
 		navigator.camera.getPicture(
 		  function success(imageURI){
 		    self.elements.photoImage.attr('src', imageURI)
+			//self.elements.photoImage.attr('src', 'https://s3-eu-west-1.amazonaws.com/ian-filestore/VCP.jpg')
+
 		  },
 		  function failure(message){
 		    alert('failed with '+message)
@@ -494,13 +500,17 @@ bb.init = function() {
 	  var self = this
 	  self.elements.userName.val('')
 	  self.elements.email.val('')
+	  self.elements.huntCode.selectmenu()
 	  console.log('loading hunts from server')
+	  var hunts = ''
       $.get(server+'/api/hunt',
         function(data,status){
 		  for (var i=0; i<data.length; i++){
 	        console.log('Adding hunt from server: '+data[i].huntCode)
-	        self.elements.huntCode.addOption(data[i].huntCode, data[i].huntName)
+			hunts += '<option value="'+data[i].huntCode+'">'+data[i].huntName+'</option>'
 	      }
+		  self.elements.huntCode.html(hunts)
+	      self.elements.huntCode.selectmenu("refresh")
 	    },
 		'json'
 	  )
@@ -526,9 +536,9 @@ bb.init = function() {
 	          console.log('Adding question from server: '+data[i].summary)
 	          app.model.questions.addquestion(data[i], model.id)
 	        }
+		    app.view.questions.render()
+	        bb.router.navigate('questions',{trigger:true})
 	      }, 'json')
-		  app.view.questions.render()
-	      bb.router.navigate('questions',{trigger:true})
 		},
         error: function (model, response) {
           console.log("error saving new participant")
