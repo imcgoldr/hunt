@@ -2,7 +2,7 @@ use hunt
 
 db.hunt.insert({
   huntCode: 'dun',
-  huntName: 'Dungarven'})
+  huntName: 'Dungarvan'})
 
 db.hunt.insert({
   huntCode: 'tra',
@@ -17,6 +17,8 @@ db.question.find({participantID:{$exists:true}})
 db.question.remove({participantID:{$exists:true}})
 db.participant.remove()
 db.question.remove()
+
+db.participant.update({userName:'ian'},{$set:{photo:true}})
 
 db.question.insert({
   huntCode: 'tra',
@@ -45,7 +47,7 @@ db.question.insert({
   longitude: -7.1557727,
   number: 2})
   
-for (var i=3; i<31; i++){
+for (var i=3; i<51; i++){
 db.question.insert({
   huntCode: 'tra',
   summary: 'Q'+i,
@@ -76,12 +78,33 @@ db.question.insert({
   number: i})
 }
 
-for (var i=1; i<51; i++){
+for (var i=1; i<31; i++){
+db.question.insert({
+  huntCode: 'wat',
+  summary: 'Q'+i,
+  question: 'This is question '+i,
+  answer: 'answer'+i,
+  latitude: 52.1662819,
+  longitude: -7.1557727,
+  number: i})
+}
+
+for (var i=1; i<31; i++){
 db.participant.insert({
       userName:'particpant'+i,
 	  email:'ian@ian.com',
 	  huntCode:'tra',
 	  numLocated: i-3,
 	  numCorrect: i,
-	  photo:false})
+	  photo:true})
+}
+
+for (var i=31; i<51; i++){
+db.participant.insert({
+      userName:'particpant'+i,
+	  email:'ian@ian.com',
+	  huntCode:'wat',
+	  numLocated: i-3,
+	  numCorrect: i,
+	  photo:true})
 }

@@ -209,23 +209,43 @@ exports.participant = {
   
   del: function( req, res ) {
     var input = req.params
-	
+	console.log('participant for deletion:'+input.id)
     var query = util.fixid({id:input.id})
-    participantcoll.remove( query, res.err$( function() {
-      var output = {}
-      res.sendjson$( output )
-    }))
-    query = {participantID:input.id}
-    questioncoll.remove( query, res.err$( function() {
-      var output = {}
-      res.sendjson$( output )
+	participantcoll.findOne( query, res.err$( function( doc ) {
+      if( doc ) {
+        var output = util.fixid( doc )
+		console.log('sending mail to '+doc.email)
+		if (doc.email){
+		  var sendgrid = new SendGrid(keys.sendgrid.user, keys.sendgrid.pw)
+		  sendgrid.send(
+            {to: doc.email,
+            from: 'ian.mcgoldrick@sunlife.com',
+            subject: 'Thanks for Hunting!',
+            text: 'Your score on the hunt was '+doc.numCorrect},
+            function(success, message) {
+              if (!success) {
+                console.log(message);
+              }
+           }
+		  )
+		}
+        participantcoll.remove( query, res.err$( function() {
+          var output = {}
+          res.sendjson$( output )
+        }))
+        query = {participantID:input.id}
+        questioncoll.remove( query, res.err$( function() {
+          var output = {}
+          res.sendjson$( output )
+        }))
+      }
     }))
   },
 
   list: function( req, res ) {
     var input = req.query
     var output = []
-    var options = {sort:[['numcorrect','desc']]}
+    var options = {sort:[['numCorrect','desc']]}
 	var query = {}
 	if (input.huntCode) {
 	  query.huntCode = input.huntCode

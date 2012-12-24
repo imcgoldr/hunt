@@ -1,22 +1,3 @@
-/*
-
-TODO
-
-- Check can load questions from absolute path... will need to in phonegap
-- Get it working on Amazon
-- Add FB login (use FB client side then failing that book p253... lab11 doesn't help :( )
-- Add picture capability (inc S3 upload?) - lab09 has backbone with phonegap... hopefully just copy it :)
-- Add mailing of notification to service owner when a hunt is downloaded
-- Change scroller setup to be same as tab example from lab09
-- Try and use http object in util.js of lab 11 social example util.js, instead of $.get...?
-- Keep summary of questions answered / located in footer
-- Add display of a map to the question page (where are we?)
-- Add the ability to delete the hunt from the device (therefore enable loading of a new one)
-- Add the ability to choose which hunt to load
-- Need to tidy up setting of coords when position is not found
-
-*/
-
 function pd( func ) {
   return function( event ) {
     event.preventDefault()
@@ -48,8 +29,13 @@ var bb = {
 }
 
 //var server = 'http://127.0.0.1'
-var server = 'http://192.168.1.3'
+//var server = 'http://192.168.1.3'
+var server = 'http://192.168.1.35'
 // var server = 'http://184.72.57.180'
+var AWS_BUCKET = 'https://s3-eu-west-1.amazonaws.com/ian-filestore/'
+
+var image = null
+var imagedata = null
 
 bb.init = function() {
 
@@ -61,7 +47,7 @@ bb.init = function() {
           self.scroller.refresh()
         }
         else {
-		  self.scroller = new iScroll( $('#pscroller')[0] )
+		  self.scroller = new iScroll( $('#qscroller')[0] )
         }
       },1)
     }
@@ -207,7 +193,8 @@ bb.init = function() {
 
   bb.view.QuestionListEntry = Backbone.View.extend(_.extend({  
 	events: {
-	  'touchend #questionlistentry': 'showQuestion'
+	  'touchend #questionlistentry': 'showQuestion',
+	  'click #questionlistentry': 'showQuestion'
     },
 	initialize: function(){
 	  console.log('view.QuestionListEntry:initialize:begin')
@@ -296,8 +283,6 @@ bb.init = function() {
 	  self.questions.on('reset', self.render)
 	  app.model.participant.on('change:numCorrect change:numLocated', self.header)
 	  
-	  self.scroller = new iScroll($('#qscroller')[0])
-	  
 	  console.log('view.Questions:initialize:end')
     },
 
@@ -310,7 +295,6 @@ bb.init = function() {
 		self.addquestion(question)
       })
 	  self.header()
-	  setTimeout(function(){self.scroller.refresh()}, 300)
 	  console.log('view.Questions:render:end')
     },
 	
@@ -328,7 +312,7 @@ bb.init = function() {
       var self = this
       var questionview = new bb.view.QuestionListEntry({model:question})
 	  self.$el.append(questionview.el)
-	  //self.scroll()
+	  self.scroll()
 	  console.log('view.Questions:addquestion:end')
 	},
 
@@ -353,7 +337,7 @@ bb.init = function() {
       console.log('view.Questions:leaveHunt:end')
 	  return false
 	}
-  }))
+  }, scrollContent))
   
   bb.view.Question = Backbone.View.extend(_.extend({
 	events: {
@@ -400,7 +384,7 @@ bb.init = function() {
 	  var self = this
 	  console.log('saving question for '+self.question.attributes.summary)
 	  var correct = self.question.attributes.answer === self.elements.guess.val()
-	  correct ? navigator.notification.vibrate(1000) : navigator.notification.beep(1)
+	  correct navigator.notification.beep(1) : navigator.notification.vibrate(1000)
 	  // Handle the location
 	  console.log('latitude:'+app.position.coords.latitude+' longitude:'+app.position.coords.longitude)
 	  var located = true
@@ -446,18 +430,39 @@ bb.init = function() {
 		photoImage: self.$el.find('#photoImage'),
 		takePhoto: self.$el.find('#takePhoto')
 	  }
+	  // Code for photo capture and uploade taken from lecture notes and course book
 	  self.elements.takePhoto.tap(function(){
 		navigator.camera.getPicture(
-		  function success(imageURI){
-		    self.elements.photoImage.attr('src', imageURI)
-			//self.elements.photoImage.attr('src', 'https://s3-eu-west-1.amazonaws.com/ian-filestore/VCP.jpg')
-
-		  },
-		  function failure(message){
-		    alert('failed with '+message)
-		  },
-		  {quality: 50, destinationType: Camera.DestinationType.FILE_URI}
-		)
+          function success(base64) {
+            imagedata = base64
+            self.elements.photoImage.attr({src:"data:image/jpeg;base64,"+imagedata})
+			console.log('Uploading...')
+            var padI = imagedata.length-1
+            while('=' == imagedata[padI]){
+    	      padI--
+            }
+            var padding = imagedata.length - padI -1
+            $.ajax({
+                url:server+':3009/api/upload/'+app.model.participant.id, 
+                type:'POST',
+                contentType:'application/octet-stream',
+                data:imagedata, 
+                headers: {'X-Lifestream-Padding':''+padding},
+                success:function(){
+                  console.log('Picture uploaded.')
+				  app.model.participant.set({photo: true}).save()
+                },
+                error:function(err){
+                  console.log(err)
+                  console.log('Could not upload picture')
+                },
+            })
+          }, 
+          function failure(){
+            console.log('Could not take picture')
+          },
+          { quality: 50 ,destinationType: Camera.DestinationType.DATA_URL}
+        ) 
       })
 	  console.log('view.Photo:initialize:end')
 	},
@@ -465,6 +470,10 @@ bb.init = function() {
 	render: function() {
 	  console.log('view.Photo:render:begin')
 	  var self = this
+	  if (image) {
+	    console.log('showing image '+image)
+		self.elements.photoImage.attr('src', image)
+	  }
   	  console.log('view.Photo:render:end')
 	},
 	
@@ -552,7 +561,8 @@ bb.init = function() {
   
   bb.view.ParticipantListEntry = Backbone.View.extend(_.extend({
 	events: {
-	  'tap #participantlistentry': 'showPhoto'
+	  'touchend #participantlistentry': 'showPhoto',
+	  'click #participantlistentry': 'showPhoto'
     },
 	initialize: function(){
 	  console.log('view.ParticipantListEntry:initialize:begin')
@@ -577,8 +587,12 @@ bb.init = function() {
 	showPhoto: function() {
 	  console.log('view.ParticipantListEntry:showPhoto:begin')
 	  var self = this
+	  image = null
 	  if (self.model.photo){
 	    console.log('showing photo for '+self.model.id)
+		image = AWS_BUCKET+self.model.id+'.jpg'
+		app.view.photo.render()
+		bb.router.navigate('photo',{trigger:true})
 	  }
 	  console.log('view.ParticipantListEntry:showPhoto:end')
 	  return false
@@ -603,6 +617,7 @@ bb.init = function() {
 	  }
 	  self.elements.goPhoto.tap(self.showPhoto)
 	  self.elements.back.tap(self.returnToList)
+	  self.scroller = new iScroll($('#pscroller')[0])
 	  console.log('view.Participants:initialize:end')
     },
 
@@ -612,7 +627,7 @@ bb.init = function() {
 	  self.setElement('#participantlist')
       self.$el.empty()
 	  console.log('loading participants from server')
-      $.get(server+'/api/participant',  // needs to limit on hunt
+      $.get(server+'/api/participant?huntCode='+app.model.participant.attributes.huntCode,
         function(data,status){
 		  for (var i=0; i<data.length; i++){
 	        console.log('Adding participant from server: '+data[i].userName)
@@ -621,6 +636,8 @@ bb.init = function() {
 	    },
 		'json'
 	  )
+  	  setTimeout(function(){self.scroller.refresh()}, 300)
+
 	  console.log('view.Participants:render:end')
     },
 	
@@ -629,13 +646,15 @@ bb.init = function() {
       var self = this
       var participantview = new bb.view.ParticipantListEntry({model:participant})
 	  self.$el.append(participantview.el)
-	  self.scroll()
+	  //self.scroll()
 	  console.log('view.Participants:addParticipant:end')
 	},
 
     showPhoto: function() {
 	  console.log('view.Participants:goPhoto:begin')
 	  var self = this
+	  image = null
+	  app.view.photo.render()
 	  bb.router.navigate('photo',{trigger:true})
       console.log('view.Participants:goPhoto:end')
 	  return false
@@ -649,15 +668,14 @@ bb.init = function() {
 	  return false
 	}
 
-  }, 
-  scrollContent))
+  }))
 
   
 }
 
 app.init_browser = function() {
 	if (browser.android) {
-		$("#questions div[data-role='content']").css({bottom:0})
+		$("div[data-role='content']").css({bottom:0})
 	}
 }
 

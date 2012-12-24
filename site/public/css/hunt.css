@@ -8,11 +8,12 @@ div[data-role='content'] {
 }
 
 .summary {
-  font-size: 8pt;
+  font-size: 12pt;
 }
 
 #participantlistentry {
-  font-size: 12pt;
+  font-size: 10pt;
+  height: 12px;
 }
 
 span.complete {
@@ -39,6 +40,7 @@ span.incomplete {
 
 #showPhoto {
   font-size: 8pt;
+  height: 10px;
   float: right;
   border: 1px solid #900;
   border-radius: 5px;
@@ -51,3 +53,12 @@ span.incomplete {
     color-stop(0.18, rgb(0,173,0)),
     color-stop(0.57, rgb(120,250,120))
   );
+}
+
+#photoImage {
+  display: block;
+  margin: 0px auto;
+  width:  200px;
+  height: 200px;
+  border: 1px solid #ccc;
+}
