@@ -30,8 +30,8 @@ var bb = {
 
 //var server = 'http://127.0.0.1'
 //var server = 'http://192.168.1.3'
-var server = 'http://192.168.1.35'
-// var server = 'http://184.72.57.180'
+//var server = 'http://192.168.1.35'
+var server = 'http://184.72.57.180'  // AWS Server
 var AWS_BUCKET = 'https://s3-eu-west-1.amazonaws.com/ian-filestore/'
 
 var image = null
@@ -193,8 +193,8 @@ bb.init = function() {
 
   bb.view.QuestionListEntry = Backbone.View.extend(_.extend({  
 	events: {
-	  'touchend #questionlistentry': 'showQuestion',
-	  'click #questionlistentry': 'showQuestion'
+	  'touchend .summary': 'showQuestion',
+	  'click .summary': 'showQuestion'
     },
 	initialize: function(){
 	  console.log('view.QuestionListEntry:initialize:begin')
@@ -384,7 +384,7 @@ bb.init = function() {
 	  var self = this
 	  console.log('saving question for '+self.question.attributes.summary)
 	  var correct = self.question.attributes.answer === self.elements.guess.val()
-	  correct navigator.notification.beep(1) : navigator.notification.vibrate(1000)
+	  correct ? navigator.notification.beep(1) : navigator.notification.vibrate(1000)
 	  // Handle the location
 	  console.log('latitude:'+app.position.coords.latitude+' longitude:'+app.position.coords.longitude)
 	  var located = true
@@ -561,8 +561,8 @@ bb.init = function() {
   
   bb.view.ParticipantListEntry = Backbone.View.extend(_.extend({
 	events: {
-	  'touchend #participantlistentry': 'showPhoto',
-	  'click #participantlistentry': 'showPhoto'
+	  'touchend #showPhoto': 'showPhoto',
+	  'click #showPhoto': 'showPhoto'
     },
 	initialize: function(){
 	  console.log('view.ParticipantListEntry:initialize:begin')

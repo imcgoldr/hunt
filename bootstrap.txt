@@ -42,7 +42,7 @@ db.question.insert({
   huntCode: 'tra',
   summary: 'Horsey',
   question: 'What pub shares its name with a classic horse race?',
-  answer: 'The St. Ledger',
+  answer: 'The St Ledger',
   latitude: 52.1662819,
   longitude: -7.1557727,
   number: 2})
@@ -78,7 +78,7 @@ db.question.insert({
   number: i})
 }
 
-for (var i=1; i<31; i++){
+for (var i=0; i<31; i++){
 db.question.insert({
   huntCode: 'wat',
   summary: 'Q'+i,

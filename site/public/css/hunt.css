@@ -8,12 +8,11 @@ div[data-role='content'] {
 }
 
 .summary {
-  font-size: 12pt;
+  font-size: 14pt;
 }
 
 #participantlistentry {
-  font-size: 10pt;
-  height: 12px;
+  font-size: 14pt;
 }
 
 span.complete {
