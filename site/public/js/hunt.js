@@ -30,7 +30,7 @@ var bb = {
 
 //var server = 'http://127.0.0.1'
 //var server = 'http://192.168.1.3'
-//var server = 'http://192.168.1.35'
+//var server = 'http://192.168.1.36'
 var server = 'http://184.72.57.180'  // AWS Server
 var AWS_BUCKET = 'https://s3-eu-west-1.amazonaws.com/ian-filestore/'
 
@@ -94,7 +94,7 @@ bb.init = function() {
 		$('div#registration').show()
 	},
 	showParticipants : function() {
-		console.log('myRouter:showRegistration')
+		console.log('myRouter:showParticipants')
 		$('div#questions').hide()
 		$('div#question').hide()
 		$('div#photo').hide()

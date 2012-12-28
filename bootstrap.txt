@@ -25,8 +25,8 @@ db.question.insert({
   summary: 'Bless You',
   question: 'What time is mass on saturday evening?',
   answer: '6:30',
-  latitude: 52.164412,
-  longitude: -7.1657361,
+  latitude: 52.16673754412,
+  longitude: -7.1551237,
   number: 0})
 
 db.question.insert({
@@ -47,31 +47,48 @@ db.question.insert({
   longitude: -7.1557727,
   number: 2})
   
-for (var i=3; i<51; i++){
 db.question.insert({
   huntCode: 'tra',
-  summary: 'Q'+i,
-  question: 'This is question '+i,
-  answer: 'answer'+i,
-  latitude: 52.1662819,
-  longitude: -7.1557727,
-  number: i})
-}
+  summary: 'Everything Inside',
+  question: 'At what (famous) shop can you buy just about anything?',
+  answer: 'Cahills',
+  latitude: 52.16673754412,
+  longitude: -7.1551237,
+  number: 3})
 
 db.question.insert({
-  huntCode: 'dun',
+  huntCode: 'tra',
+  summary: 'Chinese Greeting',
+  question: 'At which chinese take-away will you be given a friendly greeting?',
+  answer: 'Welcome',
+  latitude: 52.16673754412,
+  longitude: -7.1551237,
+  number: 4})
+
+  
+db.question.insert({
+  huntCode: 'tra',
+  summary: 'Splish Splosh',
+  question: 'Where can you go for a swim or a visit to the gym?',
+  answer: 'Splashworld',
+  latitude: 52.16673754412,
+  longitude: -7.1551237,
+  number: 5})
+
+db.question.insert({
+  huntCode: 'tra',
   summary: 'Townie',
   question: 'What colour is the door on the town hall?',
   answer: 'brown',
   latitude: 52.164412,
   longitude: -7.1657361,
-  number: 0})
+  number: 6})
   
-for (var i=1; i<31; i++){
+for (var i=0; i<31; i++){
 db.question.insert({
   huntCode: 'dun',
-  summary: 'Q'+i,
-  question: 'This is question '+i,
+  summary: 'Dungarvan Question #'+i,
+  question: 'This is Dungarvan question '+i,
   answer: 'answer'+i,
   latitude: 52.1662819,
   longitude: -7.1557727,
@@ -81,8 +98,8 @@ db.question.insert({
 for (var i=0; i<31; i++){
 db.question.insert({
   huntCode: 'wat',
-  summary: 'Q'+i,
-  question: 'This is question '+i,
+  summary: 'Waterford Question #'+i,
+  question: 'This is Waterford question '+i,
   answer: 'answer'+i,
   latitude: 52.1662819,
   longitude: -7.1557727,
