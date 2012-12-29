@@ -376,6 +376,7 @@ bb.init = function() {
 	    self.elements.guesslatitude.html(app.position.coords.latitude)
 	    self.elements.guesslongitude.html(app.position.coords.longitude)
 	  }
+  	  $( "div[data-role=page]" ).page()
   	  console.log('view.Question:render:end')
 	},
 	
