@@ -385,7 +385,9 @@ bb.init = function() {
 	  var self = this
 	  console.log('saving question for '+self.question.attributes.summary)
 	  var correct = self.question.attributes.answer === self.elements.guess.val()
-	  correct ? navigator.notification.beep(1) : navigator.notification.vibrate(1000)
+	  if (browser.android) {
+	    correct ? navigator.notification.beep(1) : navigator.notification.vibrate(1000)
+	  }
 	  // Handle the location
 	  console.log('latitude:'+app.position.coords.latitude+' longitude:'+app.position.coords.longitude)
 	  var located = true
