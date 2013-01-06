@@ -108,20 +108,21 @@ db.question.insert({
 
 for (var i=1; i<31; i++){
 db.participant.insert({
-      userName:'particpant'+i,
-	  email:'ian@ian.com',
-	  huntCode:'tra',
-	  numLocated: i-3,
-	  numCorrect: i,
-	  photo:true})
-}
-
-for (var i=31; i<51; i++){
-db.participant.insert({
-      userName:'particpant'+i,
+      userName:'Waterford Particpant #'+i,
 	  email:'ian@ian.com',
 	  huntCode:'wat',
 	  numLocated: i-3,
 	  numCorrect: i,
 	  photo:true})
 }
+
+for (var i=1; i<31; i++){
+db.participant.insert({
+      userName:'Dungarvan Particpant #'+i,
+	  email:'ian@ian.com',
+	  huntCode:'dun',
+	  numLocated: i-3,
+	  numCorrect: i,
+	  photo:true})
+}
+
