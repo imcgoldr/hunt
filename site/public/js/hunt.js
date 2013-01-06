@@ -340,10 +340,6 @@ bb.init = function() {
   }, scrollContent))
   
   bb.view.Question = Backbone.View.extend(_.extend({
-	events: {
-	  'tap #saveAnswer': 'saveAnswer',
-	  'tap #questionback': 'returnToList'
-    },
 	initialize: function(question){
 	  console.log('view.Question:initialize:begin')
 	  var self = this
@@ -355,8 +351,12 @@ bb.init = function() {
 		questiontext: self.$el.find('#questiontext'),
 		guess: self.$el.find('#guess'),
 		guesslatitude: self.$el.find('#guesslatitude'),
-		guesslongitude: self.$el.find('#guesslongitude')
+		guesslongitude: self.$el.find('#guesslongitude'),
+		saveAnswer: self.$el.find('#saveAnswer'),
+		questionback: self.$el.find('#questionback')
 	  }
+	  self.elements.saveAnswer.tap(self.saveAnswer)
+	  self.elements.questionback.tap(self.returnToList)
 	  self.render()
 	  self.question.on('change', self.render)
 	  console.log('view.Question:initialize:end')
